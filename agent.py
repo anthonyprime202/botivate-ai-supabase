@@ -36,11 +36,9 @@ class AgentState(TypedDict):
     retries: int
     intent: str
 
-# <<< MODIFIED: Connect to PostgreSQL using environment variables >>>
 
 db_uri = os.getenv("DATABASE_URI")
 engine = create_engine(db_uri)
-# <<< END OF MODIFICATION >>>
 
 db = SQLDatabase(engine=engine) 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
@@ -75,7 +73,7 @@ def handle_conversation_node(state: AgentState):
     """Creates natural conversation with the user."""
     print("--- Handling Conversation ---")
     prompt = ChatPromptTemplate.from_messages([
-        ('system', "You are a friendly assistant. Reply to the user politely with a relevant response."),
+        ('system', "You are a friendly assistant, Diya. Reply to the user politely with a relevant response."),
         MessagesPlaceholder(variable_name="chat_history"),
         ('human', "{question}"),
         MessagesPlaceholder(variable_name="agent_scratchpad")
@@ -94,7 +92,6 @@ def generate_query_node(state: AgentState):
     """Takes the user's question, generates a SQL query, and adds it to the state."""
     print("--- Generating SQL Query ---")
 
-    # <<< MODIFIED: Updated system prompt to explicitly handle UNIONs >>>
     system_prompt = """You are an AI expert in writing PostgreSQL queries.
     Given a user question and conversation history, create a syntactically correct PostgreSQL query.
     The query should work on the given schema.
@@ -105,7 +102,9 @@ def generate_query_node(state: AgentState):
     2.  **HOW TO FIX `UNION`:** You must explicitly list the columns to select. Identify a set of common, meaningful columns (e.g., "Task", "Status", "Assignee", "Priority", "Due_Date"). For tables that are missing one of these columns, you **MUST** select `NULL` and cast it to the appropriate type, aliasing it to the common column name. For example: `SELECT "Task", "Status", NULL::text AS "Assignee" FROM "Checklist"`.
 
     --- Table Descriptions ---
-    - When a user asks about "tasks", they are referring to entries where table has fields relevant to tasks, like "TaskID", or "Task Description". You MUST query one of these tables. DO NOT invent or query a non-existent table named "tasks".
+    - When a user asks about "tasks" or "kaam", they are referring to entries where table has fields relevant to tasks, like "TaskID", or "Task Description". You MUST query one of these tables. DO NOT invent or query a non-existent table named "tasks".
+    - When a user user asks about "orders", they are referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
+    - When a user refers to sheets they are actually taking about tables.
     ------------------------
     
     --- Data Dictionary ---
@@ -117,7 +116,6 @@ def generate_query_node(state: AgentState):
     - Only return the SQL query. Do not add any other text or explanation.
     - **IMPORTANT:** If a table or column name contains a space or is a reserved keyword, you MUST wrap it in double quotes. For example: "Task Description".
     """
-    # <<< END OF MODIFICATION >>>
 
     if "Error:" in state.get('result', ''):
         system_prompt += """
@@ -157,7 +155,7 @@ def summarize_result_node(state: AgentState):
     """Takes the query result and creates a natural language answer."""
     print("--- Summarizing Result ---")
     prompt = ChatPromptTemplate.from_messages([
-        ('system', "You are a helpful AI assistant. Your job is to answer the user's question in medium lenght and descriptive way, based on the data provided."),
+        ('system', "You are a helpful AI assistant, Diya. Your job is to answer the user's question in medium length and descriptive way, based on the data provided. And in the same language as user."),
         ('human', """Based on the user's question: "{question}"
         The following SQL query was generated: "{query}"
         And here is the result from the database: "{result}"
@@ -176,7 +174,7 @@ def handle_error_node(state: AgentState):
     """Handles cases where the agent gives up after multiple retries."""
     print("--- 😩 Agent failed after multiple retries ---")
     error_prompt = ChatPromptTemplate.from_messages([
-        ('system', "You are a helpful AI assistant for a SQL database. The query you generated failed multiple times. Explain to the user that you couldn't find the answer and suggest how they could rephrase their question for better results."),
+        ('system', "You are a helpful AI assistant, Diya, for a SQL database. The query you generated failed multiple times. Explain to the user that you couldn't find the answer."),
         ('human', """The user asked: "{question}"
         Your last attempted SQL query was: "{query}"
         It failed with the error: "{error}"
