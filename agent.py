@@ -104,11 +104,11 @@ def generate_query_node(state: AgentState):
     --- Table Descriptions ---
     - When a user asks about "tasks" or "kaam", they are referring to entries where table has fields relevant to tasks, like "TaskID", or "Task Description". You MUST query one of these tables. DO NOT invent or query a non-existent table named "tasks".
     - When a user user asks about "orders", they are referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
-    - When a user refers to sheets they are actually taking about tables.
+    - When a user refers to sheets they are actually talking about tables.
     ------------------------
     
     --- Data Dictionary ---
-    - The "Status" column: 'Completed', 'Yes', 'Done' all mean the task is complete.
+    - The "Status" column: 'Completed', 'Yes', 'Done' all mean the task is complete. NULL, 'Not Complete', 'Pending' may mean the task is pending.
     - The "Priority" column: 'High', 'Urgent', 'H' all mean high priority. 'Low' and 'L' mean low priority.
     - The "Assignee" column: Usernames like 'john.doe' and 'johnd' should be treated as the same person.
     -----------------------

@@ -1,10 +1,8 @@
 import os
 import requests
-import json
 import psycopg2
 from dotenv import load_dotenv
 from supabase import create_client, Client
-from datetime import datetime
 
 # --- Configuration ---
 load_dotenv()
@@ -58,11 +56,14 @@ def get_column_types(rows):
     final_column_types = {h: type_hierarchy[level] for h, level in column_levels.items()}
     return final_column_types
 
-# --- Main Script Logic (with DROP TABLE to ensure freshness) ---
-if __name__ == "__main__":
+def sync_to_db():
+    """
+    Fetches data from a Google Apps Script endpoint and synchronizes it 
+    to a PostgreSQL database (Supabase), recreating tables for a fresh sync.
+    """
     if not all([SUPABASE_URL, SUPABASE_KEY, APP_SCRIPT_URL, "[YOUR-PASSWORD]" not in DB_CONNECTION_STRING]):
         print("❌ Error: Missing environment variables or placeholder password. Please check your .env file and script.")
-        exit(1)
+        return
 
     try:
         print("🚀 Fetching data from Google Apps Script...")
@@ -77,7 +78,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"❌ An error occurred during setup: {e}")
-        exit(1)
+        return
 
     for table_name, rows in sheets_data.items():
         sanitized_table_name = "".join(c if c.isalnum() else '_' for c in table_name)
@@ -100,8 +101,8 @@ if __name__ == "__main__":
             
             cols_sql_parts = []
             for col_name, sql_type in column_definitions.items():
-                 sanitized_col_name = "".join(c if c.isalnum() else '_' for c in col_name)
-                 cols_sql_parts.append(f'"{sanitized_col_name}" {sql_type}')
+                sanitized_col_name = "".join(c if c.isalnum() else '_' for c in col_name)
+                cols_sql_parts.append(f'"{sanitized_col_name}" {sql_type}')
             
             create_table_sql += ", ".join(cols_sql_parts) + ');'
             
@@ -127,10 +128,16 @@ if __name__ == "__main__":
                 for key, val in row.items():
                     if key:
                         sanitized_key = "".join(c if c.isalnum() else '_' for c in key)
+                        # The original script relies on upsert which will perform a type cast
+                        # for the column. To maintain original logic, we clean the keys
+                        # but let Supabase handle the type conversion on insert/upsert.
                         clean_row[sanitized_key] = None if val is None or str(val).strip() == "" else val
                 clean_rows.append(clean_row)
 
-            _, count = supabase.table(sanitized_table_name).upsert(clean_rows).execute()
+            # Supabase upsert requires a primary key, which is the 'id' we created.
+            # It will insert new rows and update existing ones (though here, all are new
+            # due to the preceding DROP TABLE).
+            supabase.table(sanitized_table_name).upsert(clean_rows).execute()
             print(f"✅ Successfully inserted/updated data for '{sanitized_table_name}'.")
 
         except Exception as e:
@@ -140,3 +147,7 @@ if __name__ == "__main__":
     cursor.close()
     conn.close()
     print("\n🎉 All sheets processed. Sync complete!")
+
+# --- Main Script Execution Block ---
+if __name__ == "__main__":
+    sync_to_db()
