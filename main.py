@@ -1,6 +1,6 @@
 import os
 
-from fastapi import FastAPI, BackgroundTasks, Request, HTTPException
+from fastapi import FastAPI, BackgroundTasks, Request, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
@@ -46,6 +46,9 @@ app.add_middleware(
 async def root():
     return {"status": "ok"}
 
+@app.head("/")
+async def status_check(response: Response):
+    return Response(status_code=200)
 
 @app.post("/chat")
 async def chat_with_agent(request: ChatRequest):
