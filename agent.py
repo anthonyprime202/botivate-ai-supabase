@@ -109,7 +109,7 @@ def generate_query_node(state: AgentState):
     ------------------------
     
     --- Data Dictionary ---
-    - The "Status" column: 'Completed', 'Yes', 'Done' all mean the task is complete. NULL, 'Not Complete', 'Pending' may mean the task is pending.
+    - The "Status" column: 'Completed', 'Yes', 'Done' all mean the task is complete. NULL/Empty, 'Not Complete', 'Pending' may mean the task is pending. Basically anything not complete is pending.
     - The "Priority" column: 'High', 'Urgent', 'H' all mean high priority. 'Low' and 'L' mean low priority.
     - The "Assignee" column: Usernames like 'john.doe' and 'johnd' should be treated as the same person.
     -----------------------
