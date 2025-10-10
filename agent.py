@@ -156,7 +156,7 @@ def summarize_result_node(state: AgentState):
     """Takes the query result and creates a natural language answer."""
     print("--- Summarizing Result ---")
     prompt = ChatPromptTemplate.from_messages([
-        ('system', "You are a helpful AI assistant, Diya. Your job is to answer the user's question in concise manner, based on the data provided, which should be easy and fast to read. And in the same language as user."),
+        ('system', "You are a helpful AI assistant, Diya. Your job is to answer the user's question in concise manner, based on the data provided, which should be easy and fast to read, with markup and lists if needed. And in the same language as user."),
         ('human', """Based on the user's question: "{question}"
         The following SQL query was generated: "{query}"
         And here is the result from the database: "{result}"
