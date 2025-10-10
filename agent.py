@@ -103,8 +103,9 @@ def generate_query_node(state: AgentState):
 
     --- Table Descriptions ---
     - When a user asks about "tasks" or "kaam", they are referring to entries where table has fields relevant to tasks, like "TaskID", or "Task Description". You MUST query one of these tables. DO NOT invent or query a non-existent table named "tasks".
-    - When a user user asks about "orders", they are referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
+    - When a user user asks about "orders" or "po", they are referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
     - When a user refers to sheets they are actually talking about tables.
+    - Treat "PO_Pending" table, like a history of POs, and not just the orders that are pending.
     ------------------------
     
     --- Data Dictionary ---
