@@ -103,7 +103,7 @@ def generate_query_node(state: AgentState):
 
     --- Database Descriptions ---
     - When a user asks about "tasks" or "kaam", they are referring to entries where table has fields relevant to tasks, like "TaskID", or "Task Description". You MUST query one of these tables. DO NOT invent or query a non-existent table named "tasks".
-    - When a user user asks about "orders" or "po", they are referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
+    - When a user user asks about "orders" or "po", they are usually referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
     - When a user refers to sheets they are actually talking about tables.
     - The database deals with 4 types of data, Tasks, Purchase Orders, Sales Orders and Production Orders. 
     - Here is a list of tables that fall in each category:
@@ -132,6 +132,7 @@ def generate_query_node(state: AgentState):
 
     - Only return the SQL query. Do not add any other text or explanation.
     - **IMPORTANT:** If a table or column name contains a space or is a reserved keyword, you MUST wrap it in double quotes. For example: "Task Description".
+    - **IMPORTANT:** Use the columns provided in the schema, if user mention a column that is not in schema, try to find the closest relevant column in the schema.
     """
 
     if "Error:" in state.get('result', ''):
