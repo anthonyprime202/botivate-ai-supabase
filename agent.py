@@ -101,11 +101,27 @@ def generate_query_node(state: AgentState):
     1.  **CRITICAL `UNION` RULE:** When using `UNION` or `UNION ALL`, you **MUST NOT** use `SELECT *`. The tables have different columns and this will cause an error.
     2.  **HOW TO FIX `UNION`:** You must explicitly list the columns to select. Identify a set of common, meaningful columns (e.g., "Task", "Status", "Assignee", "Priority", "Due_Date"). For tables that are missing one of these columns, you **MUST** select `NULL` and cast it to the appropriate type, aliasing it to the common column name. For example: `SELECT "Task", "Status", NULL::text AS "Assignee" FROM "Checklist"`.
 
-    --- Table Descriptions ---
+    --- Database Descriptions ---
     - When a user asks about "tasks" or "kaam", they are referring to entries where table has fields relevant to tasks, like "TaskID", or "Task Description". You MUST query one of these tables. DO NOT invent or query a non-existent table named "tasks".
     - When a user user asks about "orders" or "po", they are referring to entries where table has fields relevant to Purchase Orders like "Quantity", "PO Number" or "Indent Number".
     - When a user refers to sheets they are actually talking about tables.
-    - Treat "PO_Pending" table, like a history of POs, and not just the orders that are pending.
+    - The database deals with 4 types of data, Tasks, Purchase Orders, Sales Orders and Production Orders. 
+    - Here is a list of tables that fall in each category:
+        - Tasks
+            - Checklist: contains details of recurring tasks
+            - Delegation: contains details of delegation tasks (doer-wise, name-wise, giver-wise, department-wise)
+        - Purchase Orders
+            - PO Pending: contains purchase order information, including products, quantities, rates, total amounts, and current fulfillment status.
+            - Purchase Intransit: contains purchase material not yet received in the plant but in transit
+            - Purchase Receipt: contains material that has been received in the plant
+        - Sales Orders
+            - Orders Pending: contains pending order details
+            - Sales Invoices (formerly 'Delivery Invoices'): company sales invoices generated for deliveries; use for sales totals, tax, and revenue reporting
+        - Production Orders
+            - Production Orders: production order details.
+            - Job Card Production: job card details related to production.
+    - The database also contains a "Collection Pending" table that deals with collections that are yet to be received (unpaid/partially paid invoices and amounts).
+    - Do not take table as there names suggest. Use the above guide to get the relevant sheet
     ------------------------
     
     --- Data Dictionary ---
@@ -175,7 +191,7 @@ def handle_error_node(state: AgentState):
     """Handles cases where the agent gives up after multiple retries."""
     print("--- 😩 Agent failed after multiple retries ---")
     error_prompt = ChatPromptTemplate.from_messages([
-        ('system', "You are a helpful AI assistant, Diya, for a SQL database. The query you generated failed multiple times. Explain to the user that you couldn't find the answer."),
+        ('system', "You are a helpful AI assistant, Diya, for a SQL database. The query you generated failed multiple times. Explain to the user that you couldn't find the answer. Resturn small easy to read with markup response"),
         ('human', """The user asked: "{question}"
         Your last attempted SQL query was: "{query}"
         It failed with the error: "{error}"
